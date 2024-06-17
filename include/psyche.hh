@@ -1,62 +1,80 @@
-#ifndef CAL2TEX
-#define CAL2TEX 1
+#ifndef PSYCHE
+#define PSYCHE 1
 #include <iostream>
 #include <fstream>
 #include <libical/ical.h>
 #include <vector>
 #include <string>
+#include <regex>
 #include <unordered_map>
 #include "../include/cal_events.hh"
-static const std::string prog_name {"cal2tex"};
+#include "../include/file_manip.hh"
+#include "../include/utils.hh"
+static const std::string prog_name {"psyche"};
 #define USAGE\
     std::cerr << prog_name << " <calendar_file> <output_pdf>\n";\
     return 1;
 #define IS_CURRENT_NULLPTR\
  current_event != nullptr ? current_event : "";
-class Cal2tex{
+// TODO list:
+//          1) Write parser[ ]
+//          2) Move file to different class[ ]
+//          3) Save "CPF" in a GPG file[ ]
+//          4) Make GUI[ ]
+class Psyche{
     private:
         std::vector<Cal_events>                m_events;
         std::string                            m_ifname;
         std::string                            m_ofname;
-        std::ifstream                          m_ifile;
-        std::ofstream                          m_ofile;
+        //std::ifstream                          m_ifile;
+        //std::ofstream                          m_ofile;
+        manipulation::File                     m_ifile;
         std::vector<std::string>               m_filenames;
         std::vector<std::ofstream>             m_tex_ofiles;
         std::vector<std::string>               m_ics_days;
         std::string                            m_ics_month;
         std::string                            m_ics_year;
         std::unordered_map<std::string, float> m_summary_price_map;
-        void parse_ics();
+        bool parse_ics();
         void get_ics_days();
         void get_ics_month();
         void get_ics_year();
+     
     public:
-    Cal2tex(const std::string& input_file_name, 
+    Psyche(const std::string& input_file_name, 
             const std::string& output_file_name):
             m_ifname{input_file_name},
             m_ofname{output_file_name},
-            m_ifile(m_ifname),
-            m_ofile(m_ofname)
+            m_ifile(m_ifname, std::ios_base::in)
     {
-        if(m_ifile.is_open()){
             parse_ics();
-        }else{
-            std::cerr << "[ERROR]: Could not open " << m_ifname << '\n';
-            std::exit(1);
-        }
 
     }
-    ~Cal2tex()
+    ~Psyche()
     {
-        m_ifile.close();
     }
-    template<typename T>
-    friend std::ostream& operator<<(std::ostream& stream,
-                                    std::vector<T> &v);
     bool write_LaTeX_document_to_file();
     void calculate_price(const float &price) ;
 };
-void Cal2tex::parse_ics() {
+bool Psyche::parse_ics() {
+
+
+    auto file_content = m_ifile.slurp_file();
+    auto pos  {std::size_t(0)};
+    auto pos2 {std::size_t(0)};
+    auto delimiter{std::string("\n")};
+    std::vector<std::string> delimiters {"SUMMARY"};
+    while(( pos = file_content.find(delimiter)) != std::string::npos){
+            auto token = file_content.substr(0, pos);
+            for(auto &d: delimiters){
+                pos2 = token.find(d);
+                auto str = token.substr(0, pos2);
+                std::cout << str << '\n';
+                token.erase(0, pos2 + d.length());
+            }
+            file_content.erase(0, pos + delimiter.length());
+    }
+#if 0
     const char *current_event {};
     if(!m_ifile.is_open()){
         std::cerr << "[ERROR]: Could not open " << m_ifname << '\n';
@@ -89,6 +107,8 @@ void Cal2tex::parse_ics() {
     }
     icalcomponent_free(calendar);
     return;
+#endif
+    return true;
 }
 template<typename T>
 std::ostream& operator<<(std::ostream& stream,
@@ -112,7 +132,7 @@ std::ostream& operator<< (std::ostream& stream,
     return stream;
 }
 
-bool Cal2tex::write_LaTeX_document_to_file() {
+bool Psyche::write_LaTeX_document_to_file() {
     if(m_summary_price_map.empty()){
         std::cerr << "[ERROR]: Summary price map is empty\n";
         return false;
@@ -164,18 +184,19 @@ bool Cal2tex::write_LaTeX_document_to_file() {
     }
     return true;
 }
-void Cal2tex::calculate_price(const float& price) {
+void Psyche::calculate_price(const float& price) {
     std::string current_word{};
     for(const auto& event: m_events){
         current_word = event.summary;
         m_summary_price_map[current_word] += price;
     }
 }
-void Cal2tex::get_ics_days(){
+void Psyche::get_ics_days(){
     for(auto& event: m_events){
         if(!event.date_start.empty()){
             std::cout << event.summary << " " << event.date_start << '\n';
         }
     }
 }
-#endif // CAL2TEX
+#endif // PSYCHE
+
