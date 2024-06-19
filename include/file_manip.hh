@@ -1,5 +1,4 @@
-#ifndef FILE_MANIP_HH
-#define FILE_MANIP_HH 1
+#pragma once
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -13,15 +12,8 @@
 
 // TODO: Use File system constructor from C++17
 namespace manipulation{
-class File
+struct File
 {
-    private:
-        std::fstream             m_file;
-        std::ofstream            m_ofile;
-        std::string              m_ifname;
-        std::ios_base::openmode  m_openmode;
-        std::streamsize          m_file_size;
-    public:
         explicit File(const std::string& input_name, const std::ios_base::openmode& openmode)
             : m_openmode{openmode}
            
@@ -37,7 +29,11 @@ class File
         {
             m_file.close();
         }
-        friend class Psyche;
+        std::fstream             m_file;
+        std::ofstream            m_ofile;
+        std::string              m_ifname;
+        std::ios_base::openmode  m_openmode;
+        std::streamsize          m_file_size;
 };
     std::string File::slurp_file(){
         static constexpr auto buff_size =  std::size_t {1 * MB} ;
@@ -50,11 +46,8 @@ class File
                 out.append(buff, 0, m_file.gcount());
             }
             out.append(buff, 0, m_file.gcount());
-            return buff;
+            return out;
         }
         throw std::logic_error("[ERROR] File: " + m_ifname + " isn't opened\n");
-        return buff;
     }
-    
 }
-#endif // FILE_MANIP_HH

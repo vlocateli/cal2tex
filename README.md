@@ -1,4 +1,4 @@
-# PsYche
+# Cal2tex
 
 Convert a google calendar file to TeX document.
 
@@ -7,7 +7,7 @@ Convert a google calendar file to TeX document.
 $ cmake -b Build
 $ cd !$
 $ make
-$ cal2tex ../cals/<name_of_calendar_file> <texfile_name>
+$ cal2tex <calendar_file.ics> <texfile_name>
 $ pdflatex -synctex=1 -interaction=nonstopmode <texfile_name>.tex 
 ```
 ## status: wip

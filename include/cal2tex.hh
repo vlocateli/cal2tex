@@ -1,33 +1,35 @@
-#ifndef PSYCHE
-#define PSYCHE 1
-#include <iostream>
-#include <fstream>
-#include <libical/ical.h>
-#include <vector>
-#include <string>
-#include <regex>
-#include <unordered_map>
+#pragma once
+
 #include "../include/cal_events.hh"
 #include "../include/file_manip.hh"
 #include "../include/utils.hh"
-static const std::string prog_name {"psyche"};
+
+#include <sstream>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <algorithm>
+#include <libical/ical.h>
+#include <limits>
+
+static const std::string prog_name {"cal2tex"};
 #define USAGE\
     std::cerr << prog_name << " <calendar_file> <output_pdf>\n";\
     return 1;
 #define IS_CURRENT_NULLPTR\
  current_event != nullptr ? current_event : "";
 // TODO list:
-//          1) Write parser[ ]
-//          2) Move file to different class[ ]
+//          1) Parse the file to get fields: SUMMARY, DTSTART and DTEND[ ]
+//          2) Move file to different class[X]
 //          3) Save "CPF" in a GPG file[ ]
 //          4) Make GUI[ ]
-class Psyche{
+class Cal2tex{
     private:
         std::vector<Cal_events>                m_events;
         std::string                            m_ifname;
         std::string                            m_ofname;
-        //std::ifstream                          m_ifile;
-        //std::ofstream                          m_ofile;
         manipulation::File                     m_ifile;
         std::vector<std::string>               m_filenames;
         std::vector<std::ofstream>             m_tex_ofiles;
@@ -41,7 +43,7 @@ class Psyche{
         void get_ics_year();
      
     public:
-    Psyche(const std::string& input_file_name, 
+    Cal2tex(const std::string& input_file_name, 
             const std::string& output_file_name):
             m_ifname{input_file_name},
             m_ofname{output_file_name},
@@ -50,46 +52,66 @@ class Psyche{
             parse_ics();
 
     }
-    ~Psyche()
+    ~Cal2tex()
     {
     }
     bool write_LaTeX_document_to_file();
     void calculate_price(const float &price) ;
+    template<typename T>
+    void split_single_delim(const std::string &s, char delim, T result);
 };
-bool Psyche::parse_ics() {
 
+template <typename T = std::string>
+void split(const std::string &s, const std::string &delimiters, std::vector<T> &result) {
+    auto prev {std::size_t(0)}, pos{std::size_t(0)};
+    while((pos = s.find_first_of(delimiters, prev)) != std::string::npos){
+        if(pos > prev){
+           result.push_back(s.substr(prev, pos - prev));
+        }
+        prev = pos + 1;
 
-    auto file_content = m_ifile.slurp_file();
-    auto pos  {std::size_t(0)};
-    auto pos2 {std::size_t(0)};
-    auto delimiter{std::string("\n")};
-    std::vector<std::string> delimiters {"SUMMARY"};
-    while(( pos = file_content.find(delimiter)) != std::string::npos){
-            auto token = file_content.substr(0, pos);
-            for(auto &d: delimiters){
-                pos2 = token.find(d);
-                auto str = token.substr(0, pos2);
-                std::cout << str << '\n';
-                token.erase(0, pos2 + d.length());
-            }
-            file_content.erase(0, pos + delimiter.length());
     }
-#if 0
+    if(prev < s.length()){
+        result.push_back(s.substr(prev, std::string::npos));
+    }
+
+}
+template<typename T = std::string>
+auto split(const std::string &s, const std::string &delimiters){
+    std::vector<T> tokens;
+    split(s, delimiters, tokens);
+    return tokens;
+}
+bool Cal2tex::parse_ics() {
+   std::string file_content;
+   try {
+        file_content = m_ifile.slurp_file();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << '\n';
+        return false;
+    }
+    const std::string delimiters{":"};
+    auto tokens = split<std::string>(file_content, delimiters);
+    std::cout << file_content << '\n';
+
+/*
     const char *current_event {};
-    if(!m_ifile.is_open()){
+    if(!m_ifile.m_file.is_open()){
         std::cerr << "[ERROR]: Could not open " << m_ifname << '\n';
         std::exit(1);
     }
     // load the file into a buffer
-    std::string content((std::istreambuf_iterator<char>(m_ifile)),
-                         std::istreambuf_iterator<char>());
-    if(content.empty()){
-        std::cerr << "[ERROR]: File  " << m_ifname << " content is empty\n";
+    //std::string content((std::istreambuf_iterator<char>(m_ifile)),
+                         //std::istreambuf_iterator<char>());
+    auto file_content = m_ifile.slurp_file();
+
+    if(file_content.empty()){
+        std::cerr << "[ERROR]: File  " << m_ifname << " file_content is empty\n";
         std::exit(1);
     }
-    icalcomponent *calendar = icalparser_parse_string(content.c_str());
+    icalcomponent *calendar = icalparser_parse_string(file_content.c_str());
     if(!calendar){
-        std::cerr << "[ERROR]: Could not parse string content into ical component\n";
+        std::cerr << "[ERROR]: Could not parse string file_content into ical component\n";
         std::exit(1);
     }
     for(icalcomponent *event = icalcomponent_get_first_component(calendar,
@@ -106,8 +128,7 @@ bool Psyche::parse_ics() {
         m_events.push_back(e);
     }
     icalcomponent_free(calendar);
-    return;
-#endif
+*/
     return true;
 }
 template<typename T>
@@ -132,7 +153,7 @@ std::ostream& operator<< (std::ostream& stream,
     return stream;
 }
 
-bool Psyche::write_LaTeX_document_to_file() {
+bool Cal2tex::write_LaTeX_document_to_file() {
     if(m_summary_price_map.empty()){
         std::cerr << "[ERROR]: Summary price map is empty\n";
         return false;
@@ -184,19 +205,18 @@ bool Psyche::write_LaTeX_document_to_file() {
     }
     return true;
 }
-void Psyche::calculate_price(const float& price) {
+void Cal2tex::calculate_price(const float& price) {
     std::string current_word{};
     for(const auto& event: m_events){
         current_word = event.summary;
         m_summary_price_map[current_word] += price;
     }
 }
-void Psyche::get_ics_days(){
+void Cal2tex::get_ics_days(){
     for(auto& event: m_events){
         if(!event.date_start.empty()){
             std::cout << event.summary << " " << event.date_start << '\n';
         }
     }
 }
-#endif // PSYCHE
 
