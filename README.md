@@ -1,4 +1,4 @@
-# Cal2tex
+# Cal2Receipt
 
 Convert a google calendar file to TeX document.
 

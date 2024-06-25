@@ -1,6 +1,6 @@
 /*
 Cal2tex - Convert ical files to tex and generate PDF.
-Copyright (C) 2024 Victor Locateli 
+Copyright (C) 2024 Victor Locateli
 
 This program is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -25,4 +25,3 @@ struct Cal_events {
   std::string date_end;
   std::string location;
 };
-

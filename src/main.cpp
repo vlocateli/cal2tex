@@ -1,6 +1,6 @@
 /*
 Cal2tex - Convert ical files to tex and generate PDF.
-Copyright (C) 2024 Victor Locateli 
+Copyright (C) 2024 Victor Locateli
 
 This program is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -16,18 +16,16 @@ You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "../include/cal2tex.hh"
-#include "../include/file_manip.hh"
-#include "../include/utils.hh"
 
 int main(int argc, char **argv) {
   try {
     if (argc != 3) {
-      USAGE
+      USAGE;
     }
 
     const std::string input_file_name{argv[1]};
     const std::string output_file_name{argv[2]};
-    Cal2tex app(input_file_name, output_file_name);
+    calendar::Cal2tex app(input_file_name, output_file_name);
 
     app.calculate_price(60.00);
 
