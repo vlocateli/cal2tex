@@ -15,7 +15,7 @@ more details.
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "../include/cal2tex.hh"
+#include "../include/cal2receipt.hpp"
 
 int main(int argc, char **argv) {
   try {

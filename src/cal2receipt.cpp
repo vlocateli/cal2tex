@@ -1,4 +1,4 @@
-#include "../include/cal2tex.hh"
+#include "../include/cal2receipt.hpp"
 
 
 
@@ -80,10 +80,9 @@ bool calendar::Cal2tex::parse_ics() {
     std::cerr << e.what() << '\n';
     return false;
   }
-  const std::vector<std::string> delimiters{":", "\n"};
+  const std::string delimiters{":"};
   std::vector<std::string> tokens;
-  tokenize<std::string>(file_content, delimiters, tokens);
-  dbg::print(tokens);
+  tokenize(file_content, delimiters, tokens);
   return true;
 }
 

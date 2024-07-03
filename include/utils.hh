@@ -40,19 +40,5 @@ constexpr void print(T&& first, Ts&&... rest) noexcept {
 }
 }
 #endif // DEBUG
-template<typename T>
-void tokenize(std::string &s, const std::vector<T> &delimiters,
-        std::vector<T> &tokens) {
-    if(delimiters.size() == 0) { 
-        return;
-    }
-    size_t start = s.find_first_not_of(delimiters[0]), end = start;
-    for(auto delim : delimiters) {
-        while (start != std::string::npos) {
-            end = s.find(delim, start);
-            tokens.push_back(s.substr(start, end - start));
-            start = s.find_first_not_of(delim, end);
-        }
-    }
-}
-
+void tokenize(const std::string &s, const std::string &delimiters,
+        std::vector<std::string> &tokens); 
