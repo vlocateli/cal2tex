@@ -3,5 +3,9 @@
 *.so
 *.swp
 *.out
+*.aux
+*.log
+*.gz
+*.pdf
 *.json
 cal2tex
